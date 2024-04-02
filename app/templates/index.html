@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário sobre Séries</title>
+</head>
+<body>
+    <h1>Questionário sobre Séries</h1>
+    <form action="/" method="post">
+        {% csrf_token %} 
+
+        <input type="hidden" id='tempo' name='tempo' value="">
+        <input type="hidden" id='classificacao' name='classificacao' value="0">
+        <input type="hidden" id='genero' name='genero' value="">
+        {% comment %} <input type="hidden" name='seleciona' value=""> {% endcomment %}
+        
+
+
+        
+       
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+
+    function sendData() {
+    
+        const data = {
+            'tamnho': document.getElementById('tempo').value,
+            'classificacao': document.getElementById('classificacao').value
+        };
+    
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+        fetch('seleciona-genero', {
+            method: 'POST', // Método POST para enviar dados ao servidor
+            headers: {
+                'Content-Type': 'application/json', // Definindo o tipo de conteúdo como JSON
+                'X-CSRFToken': csrfToken // Incluindo o token CSRF no cabeçalho da solicitação
+            },
+            body: JSON.stringify(data) // Convertendo o objeto de dados para formato JSON
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao enviar os dados.');
+            }
+            return response.json(); // Convertendo a resposta JSON em um objeto JavaScript
+        }).then((response) => {
+            var number = Math.floor(Math.random() * response.length);
+            var category = response[number];
+            document.getElementById('genero').value = category
+            Swal.fire({
+                title: `Você assistiria uma serie:${category} ?`,
+                html: `<label>
+                        <input type="checkbox" id="sim" name="" value="sim"> Sim
+                    </label><br>
+                    <label>
+                        <input type="checkbox" id="nao" name="" value="nao"> Não
+                    </label>`,
+                showCancelButton: false,
+                confirmButtonText: 'Proxima Pergunta',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const simCheckbox = document.getElementById('sim');
+                    if (simCheckbox.checked) {
+                        return true;
+                    } else {
+                        return false; // Se não houver checkbox "sim", retornamos falso
+                    }
+                    
+                },
+                
+            }).then( (result) =>{
+                
+                const data = {
+                    'tamnho': document.getElementById('tempo').value,
+                    'classificacao': document.getElementById('classificacao').value,
+                    'genero': document.getElementById('genero').value
+                };
+
+                fetch('', {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json', // Definindo o tipo de conteúdo como JSON
+                        'X-CSRFToken': csrfToken // Incluindo o token CSRF no cabeçalho da solicitação
+                    },
+                    body: JSON.stringify(data) // Convertendo o objeto de dados para formato JSON
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao enviar os dados.');
+                    }
+                    return response.json(); // Convertendo a resposta JSON em um objeto JavaScript
+                }).then((response) => {
+                    
+                    let seriesListHtml = ''; // Inicializa uma string vazia para armazenar o HTML dos títulos das séries
+
+                    // Itera sobre a lista de filmes e adiciona os títulos à string HTML
+                    response.forEach((filme, index) => {
+                        seriesListHtml += `<p>${index}: ${filme.name}</p>`;
+                    });
+
+                    Swal.fire({
+                        title: `Series que talvez voce goste`,
+                        html:  `
+                        <div id="series-list">
+                            ${seriesListHtml} <!-- Injeta os títulos das séries aqui -->
+                        </div>
+                        `,
+                        showCancelButton: false,
+                        confirmButtonText: 'Tentar Denovo?',
+                        showLoaderOnConfirm: true,
+                    }).then( ()=>{
+                    window.location.reload();
+                })
+            });
+        });
+    })
+
+}
+        
+
+
+    Swal.fire({
+        title: "Você costuma assistir séries que têm mais de 30 minutos por episódio?",
+        html: `
+            <label>
+                <input type="checkbox" id="option1" value="sim"> Sim
+            </label><br>
+            <label>
+                <input type="checkbox" id="option2" value="nao"> Não
+            </label><br>
+        `,
+        showCancelButton: false,
+        confirmButtonText: "Próxima Pergunta",
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            const option1 = document.getElementById('option1').checked;
+            console.log(option1)
+            const op = option1;
+            console.log(            document.getElementById('tempo').value )
+            // Definindo o valor da opção selecionada no elemento oculto com o id "tempo"
+            document.getElementById('tempo').value = op;
+            console.log(            document.getElementById('tempo').value )
+
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        
+        Swal.fire({
+            title: 'Tem alguma preferência de classificação por idade?',
+            html: `
+                <label>
+                    <input type="checkbox" id="sim" name="resposta_classificacao" value="sim"> Sim
+                </label><br>
+                <label>
+                    <input type="checkbox" id="nao" name="resposta_classificacao" value="nao"> Não
+                </label>
+            `,
+            showCancelButton: false,
+            confirmButtonText: 'Proxima Pergunta',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                const simCheckbox = document.getElementById('sim');
+                if (simCheckbox.checked) {
+                    return true;
+                } else {
+                    return false; // Se não houver checkbox "sim", retornamos falso
+                }
+                
+            },
+            
+        }).then((result) => {
+                if( result.value == true || result.value == 'true'){
+                    
+                    Swal.fire({
+                        title: 'Selecione a restrição de idade:',
+                        html: `
+                            <select id="idade_select" name="resposta_classificacao">
+                                <option value="12">12 anos</option>
+                                <option value="14">14 anos</option>
+                                <option value="15">15 anos</option>
+                                <option value="16">16 anos</option>
+                                <option value="18">18 anos</option>
+                            </select>
+                        `,
+                        showCancelButton: false,
+                        confirmButtonText: 'Proxima Pergunra',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            const idade_select = document.getElementById('idade_select').value;
+                            document.getElementById('classificacao').value = idade_select
+                            return idade_select;
+                        },
+                    }).then((res) =>{
+
+                     
+                        sendData();
+                    
+                    });
+                }else{ 
+
+                    sendData()
+                
+
+                }
+   
+        })
+      
+
+    });
+    
+
+ 
+
+
+</script>
